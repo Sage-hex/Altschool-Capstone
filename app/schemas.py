@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -26,8 +27,8 @@ class UserOut(BaseModel):
     name: str
     email: EmailStr
     role: Role
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class TokenResponse(BaseModel):
@@ -52,15 +53,15 @@ class CourseOut(BaseModel):
     available_seats: int
     enrollment_count: int
     created_by: int
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class EnrollmentOut(BaseModel):
     id: int
     status: Literal["active", "cancelled"]
-    enrolled_at: str
-    updated_at: str
+    enrolled_at: datetime
+    updated_at: datetime
     user_id: int
     user_name: str
     user_email: EmailStr

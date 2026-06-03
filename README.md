@@ -1,12 +1,14 @@
 # Course Enrollment Platform API
 
-A FastAPI-based REST API for a course enrollment platform. It implements the capstone requirements: authentication, role-based authorization, course management, student enrollment, admin oversight, persistent relational storage, validation, error handling, and automated tests.
+A FastAPI-based REST API for a course enrollment platform. It implements the capstone requirements: authentication, role-based authorization, course management, student enrollment, admin oversight, **real PostgreSQL persistence**, validation, error handling, and automated tests.
 
 ## Tech stack
 
 - **FastAPI** for the HTTP API, OpenAPI documentation, dependency injection, and request validation.
 - **Pydantic** for typed request and response schemas.
-- **SQLite** via Python's standard `sqlite3` module for relational persistence.
+- **PostgreSQL** as the production database.
+- **SQLAlchemy 2.x** for ORM models, database sessions, constraints, and portable test configuration.
+- **psycopg 3** as the PostgreSQL driver.
 - **Python standard cryptography primitives** (`hashlib.scrypt`, `hmac`) for password hashing and signed bearer tokens.
 - **Pytest** and FastAPI `TestClient` for API-level tests.
 
@@ -14,18 +16,20 @@ A FastAPI-based REST API for a course enrollment platform. It implements the cap
 
 - User registration, login, and authenticated profile lookup.
 - JWT-style bearer tokens signed with HMAC SHA-256.
+- Default generated 64-character JWT secret in `.env.example`; replace it with a new secret before production deployment.
 - Passwords hashed with `scrypt` and unique per-user salts.
 - Role-based authorization for `student` and `admin` users.
 - Public course listing and course detail endpoints.
 - Admin-only course creation, updates, and deletion.
 - Student-only course enrollment and enrollment cancellation.
 - Admin enrollment reporting and platform statistics.
-- SQLite relational database with foreign keys, uniqueness constraints, and capacity checks.
+- Relational database constraints for roles, statuses, positive course capacity, unique emails, and duplicate enrollment prevention.
 - Consistent JSON API errors for application errors and FastAPI validation for request errors.
 
 ## Requirements
 
 - Python 3.11+
+- PostgreSQL 14+
 
 ## Setup
 
@@ -33,7 +37,16 @@ A FastAPI-based REST API for a course enrollment platform. It implements the cap
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
+cp .env.example .env
 ```
+
+Create the PostgreSQL database locally:
+
+```bash
+createdb course_enrollment
+```
+
+If your PostgreSQL user, password, host, or database name differs, update `DATABASE_URL` in `.env`.
 
 ## Run the API
 
@@ -47,8 +60,14 @@ The API listens on `http://127.0.0.1:8000` by default. FastAPI's generated docum
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `DATABASE_URL` | `./course-enrollment.sqlite` | SQLite database path. Use `:memory:` for ephemeral tests. |
-| `JWT_SECRET` | development fallback | Secret used to sign bearer tokens. Set this in production. |
+| `DATABASE_URL` | `postgresql+psycopg://postgres:postgres@localhost:5432/course_enrollment` | SQLAlchemy PostgreSQL connection URL. |
+| `JWT_SECRET` | generated 64-character development secret | Secret used to sign bearer tokens. Generate a new value for production. |
+
+Generate a new 64-character JWT secret with:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
 
 ## API overview
 
@@ -79,3 +98,5 @@ The API listens on `http://127.0.0.1:8000` by default. FastAPI's generated docum
 ```bash
 pytest
 ```
+
+Tests use a temporary file-backed SQLite database through SQLAlchemy so the suite can run without requiring a local PostgreSQL service. The application default and deployment configuration remain PostgreSQL.

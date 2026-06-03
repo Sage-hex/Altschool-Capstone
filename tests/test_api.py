@@ -1,10 +1,16 @@
+from collections.abc import Generator
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
 
 
-def make_client() -> TestClient:
-    return TestClient(create_app(database_url=":memory:", jwt_secret="test-secret"))
+@pytest.fixture
+def client(tmp_path) -> Generator[TestClient, None, None]:
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'test.db'}"
+    with TestClient(create_app(database_url=database_url, jwt_secret="test-secret")) as test_client:
+        yield test_client
 
 
 def register(client: TestClient, payload: dict) -> dict:
@@ -13,8 +19,7 @@ def register(client: TestClient, payload: dict) -> dict:
     return response.json()
 
 
-def test_registration_login_and_profile_access() -> None:
-    client = make_client()
+def test_registration_login_and_profile_access(client: TestClient) -> None:
     registered = register(
         client,
         {"name": "Ada Lovelace", "email": "ada@example.com", "password": "secure-pass-123"},
@@ -32,8 +37,7 @@ def test_registration_login_and_profile_access() -> None:
     assert profile.json()["user"]["name"] == "Ada Lovelace"
 
 
-def test_admin_course_management_and_public_browsing() -> None:
-    client = make_client()
+def test_admin_course_management_and_public_browsing(client: TestClient) -> None:
     admin = register(client, {"name": "Admin User", "email": "admin@example.com", "password": "secure-pass-123", "role": "admin"})
     student = register(client, {"name": "Grace Hopper", "email": "grace@example.com", "password": "secure-pass-123"})
 
@@ -63,8 +67,7 @@ def test_admin_course_management_and_public_browsing() -> None:
     assert updated.json()["course"]["capacity"] == 3
 
 
-def test_student_enrollment_rules_and_admin_reporting() -> None:
-    client = make_client()
+def test_student_enrollment_rules_and_admin_reporting(client: TestClient) -> None:
     admin = register(client, {"name": "Enrollment Admin", "email": "enrollment-admin@example.com", "password": "secure-pass-123", "role": "admin"})
     student = register(client, {"name": "Katherine Johnson", "email": "katherine@example.com", "password": "secure-pass-123"})
     course = client.post(
@@ -96,8 +99,7 @@ def test_student_enrollment_rules_and_admin_reporting() -> None:
     assert stats.json()["stats"]["enrollments"]["active"] == 1
 
 
-def test_validation_and_not_found_errors_have_consistent_shape() -> None:
-    client = make_client()
+def test_validation_and_not_found_errors_have_consistent_shape(client: TestClient) -> None:
     invalid = client.post("/api/auth/register", json={"name": "A", "email": "not-an-email", "password": "short"})
     assert invalid.status_code == 422
     assert invalid.json()["error"]["code"] == "VALIDATION_ERROR"
