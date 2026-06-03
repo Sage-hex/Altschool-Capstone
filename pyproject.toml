@@ -1,0 +1,23 @@
+[project]
+name = "course-enrollment-platform-api"
+version = "1.0.0"
+description = "FastAPI REST API for course enrollment, authentication, authorization, and admin reporting backed by PostgreSQL."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.115.6",
+  "uvicorn[standard]==0.34.0",
+  "pydantic[email]==2.10.4",
+  "python-multipart==0.0.20",
+  "SQLAlchemy==2.0.36",
+  "psycopg[binary]==3.2.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.3.4",
+  "httpx==0.28.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
