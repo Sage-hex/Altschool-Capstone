@@ -105,6 +105,11 @@ uvicorn app.main:app --reload
 
 The API listens on `http://127.0.0.1:8000` by default. FastAPI's generated documentation is available at `/docs` and `/redoc`.
 
+
+## API documentation
+
+A comprehensive request/response reference is available in [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md). It includes every endpoint, required headers, request bodies, response bodies, error formats, business rules, and `curl` examples.
+
 ## API overview
 
 ### Authentication and users
